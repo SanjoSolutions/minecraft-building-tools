@@ -8,6 +8,8 @@ An add-on for Minecraft Bedrock that adds building tools to help in making build
 * Fill hollow tool: an item with which you can fill the outer border of a space with a specified block type.
 * Fill tool block selection tool: an item with which you can select the block type that is used by the other fill tools.
 * Remove tool: an item which you can replace a space with air.
+* Copy tool: an item for copying a space.
+* Paste tool: an item for pasting a copied space.
 
 ## Requirements
 
