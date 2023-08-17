@@ -16,22 +16,28 @@ const state: Map<Entity, PlayerState> = new Map()
 
 world.beforeEvents.itemUseOn.subscribe(function (event) {
   if (event.itemStack.typeId === 'sanjo:fill_tool_block_selection_tool') {
+    const now = Date.now()
+
     event.cancel = true
 
     let playerState: PlayerState | undefined = state.get(event.source)
 
-    if (!playerState) {
-      playerState = {
-        firstBlock: null,
-        lastCalled: null,
-        blockPermutation: null,
-        savedSpace: null
+    if (!playerState || !playerState.lastCalled || now - playerState.lastCalled > 300) {
+      if (!playerState) {
+        playerState = {
+          firstBlock: null,
+          lastCalled: null,
+          blockPermutation: null,
+          savedSpace: null
+        }
+        state.set(event.source, playerState)
       }
-      state.set(event.source, playerState)
-    }
 
-    playerState.blockPermutation = event.block.permutation.clone()
-    world.sendMessage('selected block: ' + event.block.permutation.type.id)
+      playerState.blockPermutation = event.block.permutation.clone()
+      world.sendMessage('selected block: ' + event.block.permutation.type.id)
+
+      playerState.lastCalled = now
+    }
   } else if (event.itemStack.typeId === 'sanjo:fill_tool') {
     const now = Date.now()
 
