@@ -34,7 +34,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
       }
 
       playerState.blockPermutation = event.block.permutation.clone()
-      world.sendMessage('selected block: ' + event.block.permutation.type.id)
+      world.sendMessage('selected block: ' + event.block.permutation.type.id + ' ' + JSON.stringify(event.block.permutation.getAllStates()))
 
       playerState.lastCalled = now
     }
@@ -184,6 +184,41 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       playerState.lastCalled = now
     }
+  } else if (event.itemStack.typeId === 'sanjo:cut_tool') {
+    const now = Date.now()
+
+    event.cancel = true
+
+    let playerState: PlayerState | undefined = state.get(event.source)
+
+    if (!playerState || !playerState.lastCalled || now - playerState.lastCalled > 300) {
+      if (!playerState) {
+        playerState = {
+          firstBlock: null,
+          lastCalled: null,
+          blockPermutation: null,
+          savedSpace: null
+        }
+        state.set(event.source, playerState)
+      }
+
+      system.run(function () {
+        if (playerState!.firstBlock === null) {
+          world.sendMessage('setting first block')
+          playerState!.firstBlock = event.block
+        } else {
+          world.sendMessage('cutting')
+      
+          const secondBlock = event.block
+      
+          cut(playerState!.firstBlock.location.x, playerState!.firstBlock.location.y, playerState!.firstBlock.location.z, secondBlock.location.x, secondBlock.location.y, secondBlock.location.z, playerState!)
+          
+          playerState!.firstBlock = null
+        }
+      })
+
+      playerState.lastCalled = now
+    }
   } else if (event.itemStack.typeId === 'sanjo:paste_tool') {
     const now = Date.now()
 
@@ -213,6 +248,45 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
             const secondBlock = event.block
         
             paste(playerState!.firstBlock.location.x, playerState!.firstBlock.location.y, playerState!.firstBlock.location.z, secondBlock.location.x, secondBlock.location.y, secondBlock.location.z, playerState.savedSpace)
+
+            playerState!.firstBlock = null
+          } else {
+            world.sendMessage('Please copy space first before pasting.')
+          }
+        }
+      })
+
+      playerState.lastCalled = now
+    }
+  } else if (event.itemStack.typeId === 'sanjo:paste_180_degree_rotated_tool') {
+    const now = Date.now()
+
+    event.cancel = true
+
+    let playerState: PlayerState | undefined = state.get(event.source)
+
+    if (!playerState || !playerState.lastCalled || now - playerState.lastCalled > 300) {
+      if (!playerState) {
+        playerState = {
+          firstBlock: null,
+          lastCalled: null,
+          blockPermutation: null,
+          savedSpace: null
+        }
+        state.set(event.source, playerState)
+      }
+
+      system.run(function () {
+        if (playerState!.firstBlock === null) {
+          world.sendMessage('setting first block')
+          playerState!.firstBlock = event.block
+        } else {
+          if (playerState?.savedSpace) {
+            world.sendMessage('pasting')
+        
+            const secondBlock = event.block
+        
+            paste180DegreeRotated(playerState!.firstBlock.location.x, playerState!.firstBlock.location.y, playerState!.firstBlock.location.z, secondBlock.location.x, secondBlock.location.y, secondBlock.location.z, playerState.savedSpace)
 
             playerState!.firstBlock = null
           } else {
@@ -306,6 +380,11 @@ function copy(fromX: number, fromY: number, fromZ: number, toX: number, toY: num
   playerState.savedSpace = savedSpace
 }
 
+function cut(fromX: number, fromY: number, fromZ: number, toX: number, toY: number, toZ: number, playerState: PlayerState) {
+  copy(fromX, fromY, fromZ, toX, toY, toZ, playerState)
+  remove(fromX, fromY, fromZ, toX, toY, toZ)
+}
+
 function paste(fromX: number, fromY: number, fromZ: number, toX: number, toY: number, toZ: number, space: Space) {
   const x1 = Math.min(fromX, toX)
   const y1 = Math.min(fromY, toY)
@@ -318,6 +397,37 @@ function paste(fromX: number, fromY: number, fromZ: number, toX: number, toY: nu
         if (permutation) {
           const block = overworld.getBlock({x: x1 + x, y: y1 + y, z: z1 + z})
           if (block) {
+            block.setPermutation(permutation)
+          }
+        }
+      }
+    }
+  }
+}
+
+function paste180DegreeRotated(fromX: number, fromY: number, fromZ: number, toX: number, toY: number, toZ: number, space: Space) {
+  const x2 = Math.max(fromX, toX)
+  const y1 = Math.min(fromY, toY)
+  const z2 = Math.max(fromZ, toZ)
+  const overworld = world.getDimension('overworld')
+  for (let y = 0; y < space.dimensions.y; y++) {
+    for (let z = 0; z < space.dimensions.z; z++) {
+      for (let x = 0; x < space.dimensions.x; x++) {
+        let permutation = space.state[y * (space.dimensions.x * space.dimensions.z) + z * space.dimensions.x + x]
+        if (permutation) {
+          const block = overworld.getBlock({x: x2 - x, y: y1 + y, z: z2 - z})
+          if (block) {
+            const weirdoDirection = permutation.getState('weirdo_direction')
+            if (typeof weirdoDirection !== 'undefined') {
+              const rotations = new Map([
+                [0, 1],
+                [1, 0],
+                [2, 3],
+                [3, 2]
+              ])
+              const rotatedWeirdoDirection = rotations.get(weirdoDirection as number)!
+              permutation = permutation.withState('weirdo_direction', rotatedWeirdoDirection)
+            }
             block.setPermutation(permutation)
           }
         }
