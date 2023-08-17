@@ -1,9 +1,6 @@
 {
-  "name": "scripting-starter",
-  "version": "0.1.0",
-  "productName": "Minecraft TypeScript Starter Project",
-  "description": "Minecraft TypeScript Starter Project",
-  "private": true,
+  "name": "building-tools",
+  "version": "1.0.0",
   "devDependencies": {
     "del": "^6.0.0",
     "gulp": "^4.0.2",
@@ -18,7 +15,7 @@
     "enablemcpreviewloopback": "CheckNetIsolation.exe LoopbackExempt -a -p=S-1-15-2-424268864-5579737-879501358-346833251-474568803-887069379-4040235476"
   },
   "dependencies": {
-    "@minecraft/server": "1.6.0-beta.1.20.30-preview.21",
+    "@minecraft/server": "1.4.0-beta.1.20.10-stable",
     "decode-uri-component": "^0.2.2"
   }
 }
