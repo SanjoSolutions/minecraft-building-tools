@@ -1,4 +1,4 @@
-import { world, system, Block, Entity, BlockPermutation } from "@minecraft/server"
+import { world, system, Block, Entity, BlockPermutation, Player, EntityInventoryComponent } from "@minecraft/server"
 
 interface Space {
   dimensions: {x: number, y: number, z: number}
@@ -34,7 +34,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
       }
 
       playerState.blockPermutation = event.block.permutation.clone()
-      world.sendMessage('selected block: ' + event.block.permutation.type.id + ' ' + JSON.stringify(event.block.permutation.getAllStates()))
+      ;(event.source as Player).sendMessage('selected block: ' + event.block.permutation.type.id)
 
       playerState.lastCalled = now
     }
@@ -58,16 +58,16 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       system.run(function () {
         if (playerState!.firstBlock === null) {
-          world.sendMessage('setting first block')
+          ;(event.source as Player).sendMessage('setting first block')
           playerState!.firstBlock = event.block
         } else {
           const secondBlock = event.block
       
           if (playerState!.blockPermutation) {
-            world.sendMessage('filling')
+            ;(event.source as Player).sendMessage('filling')
             fill(playerState!.firstBlock.location.x, playerState!.firstBlock.location.y, playerState!.firstBlock.location.z, secondBlock.location.x, secondBlock.location.y, secondBlock.location.z, playerState!.blockPermutation)
           } else {
-            world.sendMessage('Please select a block type with the fill tool block selection tool first by using the tool on a block.')
+            ;(event.source as Player).sendMessage('Please select a block type with the fill tool block selection tool first by using the tool on a block.')
           }
 
           playerState!.firstBlock = null
@@ -96,16 +96,16 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       system.run(function () {
         if (playerState!.firstBlock === null) {
-          world.sendMessage('setting first block')
+          ;(event.source as Player).sendMessage('setting first block')
           playerState!.firstBlock = event.block
         } else {
           const secondBlock = event.block
       
           if (playerState!.blockPermutation) {
-            world.sendMessage('filling')
+            ;(event.source as Player).sendMessage('filling')
             fill(playerState!.firstBlock.location.x, playerState!.firstBlock.location.y, playerState!.firstBlock.location.z, secondBlock.location.x, secondBlock.location.y, secondBlock.location.z, playerState!.blockPermutation, {hollow: true})
           } else {
-            world.sendMessage('Please select a block type with the fill tool block selection tool first by using the tool on a block.')
+            ;(event.source as Player).sendMessage('Please select a block type with the fill tool block selection tool first by using the tool on a block.')
           }
 
           playerState!.firstBlock = null
@@ -134,10 +134,10 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       system.run(function () {
         if (playerState!.firstBlock === null) {
-          world.sendMessage('setting first block')
+          ;(event.source as Player).sendMessage('setting first block')
           playerState!.firstBlock = event.block
         } else {
-          world.sendMessage('removing')
+          ;(event.source as Player).sendMessage('removing')
       
           const secondBlock = event.block
       
@@ -169,10 +169,10 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       system.run(function () {
         if (playerState!.firstBlock === null) {
-          world.sendMessage('setting first block')
+          ;(event.source as Player).sendMessage('setting first block')
           playerState!.firstBlock = event.block
         } else {
-          world.sendMessage('copying')
+          ;(event.source as Player).sendMessage('copying')
       
           const secondBlock = event.block
       
@@ -204,10 +204,10 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       system.run(function () {
         if (playerState!.firstBlock === null) {
-          world.sendMessage('setting first block')
+          ;(event.source as Player).sendMessage('setting first block')
           playerState!.firstBlock = event.block
         } else {
-          world.sendMessage('cutting')
+          ;(event.source as Player).sendMessage('cutting')
       
           const secondBlock = event.block
       
@@ -239,11 +239,11 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       system.run(function () {
         if (playerState!.firstBlock === null) {
-          world.sendMessage('setting first block')
+          ;(event.source as Player).sendMessage('setting first block')
           playerState!.firstBlock = event.block
         } else {
           if (playerState?.savedSpace) {
-            world.sendMessage('pasting')
+            ;(event.source as Player).sendMessage('pasting')
         
             const secondBlock = event.block
         
@@ -251,7 +251,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
             playerState!.firstBlock = null
           } else {
-            world.sendMessage('Please copy space first before pasting.')
+            ;(event.source as Player).sendMessage('Please copy space first before pasting.')
           }
         }
       })
@@ -278,11 +278,11 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       system.run(function () {
         if (playerState!.firstBlock === null) {
-          world.sendMessage('setting first block')
+          ;(event.source as Player).sendMessage('setting first block')
           playerState!.firstBlock = event.block
         } else {
           if (playerState?.savedSpace) {
-            world.sendMessage('pasting')
+            ;(event.source as Player).sendMessage('pasting')
         
             const secondBlock = event.block
         
@@ -290,9 +290,34 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
             playerState!.firstBlock = null
           } else {
-            world.sendMessage('Please copy space first before pasting.')
+            ;(event.source as Player).sendMessage('Please copy space first before pasting.')
           }
         }
+      })
+
+      playerState.lastCalled = now
+    }
+  } else if (event.itemStack.typeId === 'sanjo:block_retriever') {
+    const now = Date.now()
+
+    event.cancel = true
+
+    let playerState: PlayerState | undefined = state.get(event.source)
+
+    if (!playerState || !playerState.lastCalled || now - playerState.lastCalled > 300) {
+      if (!playerState) {
+        playerState = {
+          firstBlock: null,
+          lastCalled: null,
+          blockPermutation: null,
+          savedSpace: null
+        }
+        state.set(event.source, playerState)
+      }
+
+      system.run(function () {
+        const inventory = event.source.getComponent(EntityInventoryComponent.componentId) as EntityInventoryComponent
+        inventory.container.addItem(event.block.permutation.getItemStack(1))
       })
 
       playerState.lastCalled = now

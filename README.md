@@ -12,6 +12,7 @@ An add-on for Minecraft Bedrock that adds building tools to help in making build
 * Cut tool: an item for cutting a space. Can be pasted multiple times, like with copy & paste for text.
 * Paste tool: an item for pasting a copied space.
 * Paste 180° degree rotated tool: an item for pasting a copied space rotated by 180° on the y-axis.
+* Block retriever: an item that adds one block, of which you have used the tool on, to the inventory.
 
 ## Requirements
 
