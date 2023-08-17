@@ -4,7 +4,7 @@
     "name": "Building tools",
     "description": "Building tools.",
     "uuid": "e378658f-11ad-49d5-bad4-3140480b3428",
-    "version": [1, 0, 0],
+    "version": [1, 1, 0],
     "min_engine_version": [1, 20, 0]
   },
   "modules": [
@@ -13,14 +13,14 @@
       "language": "javascript",
       "type": "script",
       "uuid": "d20025fc-73c9-420a-85b3-936f06f5346d",
-      "version": [1, 0, 0],
+      "version": [1, 1, 0],
       "entry": "scripts/main.js"
     },
     {
       "description": "Building tools",
       "type": "data",
       "uuid": "cd46f994-8f7f-4ec3-ab4f-f5cdde0fe68d",
-      "version": [1, 0, 0]
+      "version": [1, 1, 0]
     }
   ],
   "dependencies": [
