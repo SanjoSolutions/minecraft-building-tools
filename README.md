@@ -13,6 +13,7 @@ An add-on for Minecraft Bedrock that adds building tools to help in making build
 * Paste tool: an item for pasting a copied space.
 * Paste 180° degree rotated tool: an item for pasting a copied space rotated by 180° on the y-axis.
 * Block retriever: an item that adds one block, of which you have used the tool on, to the inventory.
+* Roof maker: an item with which you can build roofs.
 
 ## Requirements
 
