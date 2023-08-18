@@ -12,6 +12,68 @@ interface PlayerState {
   savedSpace: Space | null
 }
 
+let stairsToBlock: Map<string, BlockPermutation> | null = null
+
+function loadStairsToBlock() {
+  if (stairsToBlock === null) {
+    stairsToBlock = new Map([
+      ['minecraft:normal_stone_stairs', BlockPermutation.resolve('stone')],
+      ['minecraft:cobblestone_stairs', BlockPermutation.resolve('cobblestone')],
+      ['minecraft:mossy_cobblestone_stairs', BlockPermutation.resolve('mossy_cobblestone')],
+      ['minecraft:oak_stairs', BlockPermutation.resolve('planks', {wood_type: 'oak'})],
+      ['minecraft:spruce_stairs', BlockPermutation.resolve('planks', {wood_type: 'spruce'})],
+      ['minecraft:birch_stairs', BlockPermutation.resolve('planks', {wood_type: 'birch'})],
+      ['minecraft:jungle_stairs', BlockPermutation.resolve('planks', {wood_type: 'jungle'})],
+      ['minecraft:acacia_stairs', BlockPermutation.resolve('planks', {wood_type: 'acacia'})],
+      ['minecraft:dark_oak_stairs', BlockPermutation.resolve('planks', {wood_type: 'dark_oak'})],
+      ['minecraft:mangrove_stairs', BlockPermutation.resolve('planks', {wood_type: 'mangrove'})],
+      ['minecraft:cherry_stairs', BlockPermutation.resolve('planks', {wood_type: 'cherry'})],
+      ['minecraft:bamboo_stairs', BlockPermutation.resolve('planks', {wood_type: 'bamboo'})],
+      ['minecraft:bamboo_mosaic_stairs', BlockPermutation.resolve('planks', {wood_type: 'bamboo_mosaic'})],
+      ['minecraft:stone_brick_stairs', BlockPermutation.resolve('stonebrick', {stone_brick_type: 'default'})],
+      ['minecraft:mossy_stone_brick_stairs', BlockPermutation.resolve('stonebrick', {stone_brick_type: 'mossy'})],
+      ['minecraft:sandstone_stairs', BlockPermutation.resolve('sandstone')],
+      ['minecraft:smooth_sandstone_stairs', BlockPermutation.resolve('sandstone', {sand_stone_type: 'smooth'})],
+      ['minecraft:red_sandstone_stairs', BlockPermutation.resolve('sandstone', {sand_stone_type: 'red'})],
+      ['minecraft:smooth_red_sandstone_stairs', BlockPermutation.resolve('sandstone', {sand_stone_type: 'smooth_red'})],
+      ['minecraft:granite_stairs', BlockPermutation.resolve('stone', {stone_type: 'granite'})],
+      ['minecraft:polished_granite_stairs', BlockPermutation.resolve('stone', {stone_type: 'polished_granite'})],
+      ['minecraft:diorite_stairs', BlockPermutation.resolve('stone', {stone_type: 'diorite'})],
+      ['minecraft:polished_diorite_stairs', BlockPermutation.resolve('stone', {stone_type: 'polished_diorite'})],
+      ['minecraft:andesite_stairs', BlockPermutation.resolve('stone', {stone_type: 'andesite'})],
+      ['minecraft:polished_andesite_stairs', BlockPermutation.resolve('stone', {stone_type: 'polished_andesite'})],
+      ['minecraft:brick_stairs', BlockPermutation.resolve('brick_block')],
+      ['minecraft:nether_brick_stairs', BlockPermutation.resolve('nether_brick')],
+      ['minecraft:red_nether_brick_stairs', BlockPermutation.resolve('red_nether_brick')],
+      ['minecraft:end_stone_brick_stairs', BlockPermutation.resolve('end_bricks')],
+      ['minecraft:quartz_brick_stairs', BlockPermutation.resolve('quartz_bricks')],
+      ['minecraft:smooth_quartz_brick_stairs', BlockPermutation.resolve('quartz_block', {chisel_type: 'smooth'})],
+      ['minecraft:purpur_stairs', BlockPermutation.resolve('purpur_block')],
+      ['minecraft:prismarine_stairs', BlockPermutation.resolve('prismarine')],
+      ['minecraft:dark_prismarine_stairs', BlockPermutation.resolve('prismarine', {prismarine_block_type: 'dark'})],
+      ['minecraft:prismarine_bricks_stairs', BlockPermutation.resolve('prismarine', {prismarine_block_type: 'bricks'})],
+      ['minecraft:crimson_stairs', BlockPermutation.resolve('crimson_planks')],
+      ['minecraft:warped_stairs', BlockPermutation.resolve('warped_planks')],
+      ['minecraft:blackstone_stairs', BlockPermutation.resolve('blackstone')],
+      ['minecraft:polished_blackstone_stairs', BlockPermutation.resolve('polished_blackstone')],
+      ['minecraft:polished_blackstone_brick_stairs', BlockPermutation.resolve('polished_blackstone_bricks')],
+      ['minecraft:cut_copper_stairs', BlockPermutation.resolve('cut_copper')],
+      ['minecraft:exposed_cut_copper_stairs', BlockPermutation.resolve('exposed_cut_copper')],
+      ['minecraft:weathered_cut_copper_stairs', BlockPermutation.resolve('weathered_cut_copper')],
+      ['minecraft:oxidized_cut_copper_stairs', BlockPermutation.resolve('oxidized_cut_copper')],
+      ['minecraft:waxed_cut_copper_stairs', BlockPermutation.resolve('waxed_cut_copper')],
+      ['minecraft:waxed_exposed_cut_copper_stairs', BlockPermutation.resolve('waxed_exposed_cut_copper')],
+      ['minecraft:waxed_weathered_cut_copper_stairs', BlockPermutation.resolve('waxed_weathered_cut_copper')],
+      ['minecraft:waxed_oxidized_cut_copper_stairs', BlockPermutation.resolve('waxed_oxidized_cut_copper')],
+      ['minecraft:cobbled_deepslate_stairs', BlockPermutation.resolve('cobbled_deepslate')],
+      ['minecraft:deepslate_tile_stairs', BlockPermutation.resolve('deepslate_tile')],
+      ['minecraft:polished_deepslate_stairs', BlockPermutation.resolve('polished_deepslate')],
+      ['minecraft:deepslate_brick_stairs', BlockPermutation.resolve('deepslate_bricks')],
+      ['minecraft:mud_brick_stairs', BlockPermutation.resolve('mud_bricks')],
+    ])
+  }
+}
+
 const state: Map<Entity, PlayerState> = new Map()
 
 world.beforeEvents.itemUseOn.subscribe(function (event) {
@@ -34,7 +96,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
       }
 
       playerState.blockPermutation = event.block.permutation.clone()
-      ;(event.source as Player).sendMessage('selected block: ' + event.block.permutation.type.id)
+      ;(event.source as Player).sendMessage('selected block: ' + event.block.permutation.type.id + ', ' + JSON.stringify(event.block.permutation.getAllStates()))
 
       playerState.lastCalled = now
     }
@@ -322,6 +384,44 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       playerState.lastCalled = now
     }
+  } else if (event.itemStack.typeId === 'sanjo:roof_maker') {
+    const now = Date.now()
+
+    event.cancel = true
+
+    let playerState: PlayerState | undefined = state.get(event.source)
+
+    if (!playerState || !playerState.lastCalled || now - playerState.lastCalled > 300) {
+      if (!playerState) {
+        playerState = {
+          firstBlock: null,
+          lastCalled: null,
+          blockPermutation: null,
+          savedSpace: null
+        }
+        state.set(event.source, playerState)
+      }
+
+      system.run(function () {
+        if (playerState!.firstBlock === null) {
+          ;(event.source as Player).sendMessage('setting first block')
+          playerState!.firstBlock = event.block
+        } else {
+          const secondBlock = event.block
+      
+          if (playerState!.blockPermutation) {
+            ;(event.source as Player).sendMessage('making roof')
+            makeRoof(playerState!.firstBlock.location.x, playerState!.firstBlock.location.y, playerState!.firstBlock.location.z, secondBlock.location.x, secondBlock.location.y, secondBlock.location.z, playerState!.blockPermutation)
+          } else {
+            ;(event.source as Player).sendMessage('Please select a block type with the fill tool block selection tool first by using the tool on a block.')
+          }
+
+          playerState!.firstBlock = null
+        }
+      })
+
+      playerState.lastCalled = now
+    }
   }
 })
 
@@ -344,6 +444,58 @@ function fill(fromX: number, fromY: number, fromZ: number, toX: number, toY: num
           overworld.getBlock({x, y, z})?.setPermutation(permutation)
         }
       }
+    }
+  }
+}
+
+function makeRoof(fromX: number, fromY: number, fromZ: number, toX: number, toY: number, toZ: number, permutation: BlockPermutation) {
+  const x1 = Math.min(fromX, toX)
+  const y1 = Math.min(fromY, toY)
+  const z1 = Math.min(fromZ, toZ)
+  const x2 = Math.max(fromX, toX)
+  const y2 = Math.max(fromY, toY)
+  const z2 = Math.max(fromZ, toZ)
+  const dimensionY = Math.abs(toY - fromY) + 1
+  const overworld = world.getDimension('overworld')
+  const isWithWeirdoDirection = typeof permutation.getState('weirdo_direction') !== 'undefined'
+  let maxLengthForHighestLayer = isWithWeirdoDirection ? 3 : 2
+  for (let y = 0; y < dimensionY; y++) {
+    const minZ = z1 + y
+    const maxZ = z2 - y
+    const minX = x1 + y
+    const maxX = x2 - y
+    const dimensionZ = Math.abs(maxZ - minZ) + 1
+    const dimensionX = Math.abs(maxX - minX) + 1
+    const isHighestLayer = dimensionZ <= maxLengthForHighestLayer || dimensionX <= maxLengthForHighestLayer || y === dimensionY - 1
+    for (let z = minZ; z <= maxZ; z++) {
+      for (let x = minX; x <= maxX; x++) {
+        if (x === minX || x === maxX || z === minZ || z === maxZ) {
+          let permutationForBlock
+          if (isWithWeirdoDirection) {
+            let weirdoDirection: number | undefined
+            if (x === minX) {
+              weirdoDirection = 0
+            } else if (x === maxX) {
+              weirdoDirection = 1
+            } else if (z === minZ) {
+              weirdoDirection = 2
+            } else if (z === maxZ) {
+              weirdoDirection = 3
+            }
+            permutationForBlock = permutation.withState('weirdo_direction', weirdoDirection!)
+          } else {
+            permutationForBlock = permutation
+          }
+          overworld.getBlock({x, y: y1 + y, z})?.setPermutation(permutationForBlock)
+        } else if (isHighestLayer) {
+          loadStairsToBlock()
+          const permutationForBlock = stairsToBlock!.get(permutation.type.id) || permutation
+          overworld.getBlock({x, y: y1 + y, z})?.setPermutation(permutationForBlock)
+        }
+      }
+    }
+    if (isHighestLayer) {
+      break
     }
   }
 }
