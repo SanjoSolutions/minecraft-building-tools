@@ -22,4 +22,4 @@ Requires Beta APIs to be enabled under "Experiments" in the world settings.
 
 ## Supported versions
 
-Has been tested with 1.20.12.
+Has been tested with 1.20.15.
