@@ -223,7 +223,7 @@ function loadStairsToBlock() {
 const state: Map<Entity, PlayerState> = new Map()
 
 world.beforeEvents.itemUseOn.subscribe(function (event) {
-  if (event.itemStack.typeId === "sanjo:fill_tool_block_selection_tool") {
+  if (event.itemStack.typeId === "sanjo:block_selection_tool") {
     const now = Date.now()
 
     event.cancel = true
