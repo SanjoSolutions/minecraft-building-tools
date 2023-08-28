@@ -8,8 +8,14 @@ import {
   EntityInventoryComponent,
 } from "@minecraft/server"
 
+interface Dimensions {
+  x: number
+  y: number
+  z: number
+}
+
 interface Space {
-  dimensions: { x: number; y: number; z: number }
+  dimensions: Dimensions
   state: (BlockPermutation | null)[]
 }
 
@@ -244,7 +250,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
         "selected block: " +
           event.block.permutation.type.id +
           ", " +
-          JSON.stringify(event.block.permutation.getAllStates())
+          JSON.stringify(event.block.permutation.getAllStates()),
       )
 
       playerState.lastCalled = now
@@ -287,11 +293,11 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
               secondBlock.location.x,
               secondBlock.location.y,
               secondBlock.location.z,
-              playerState!.blockPermutation
+              playerState!.blockPermutation,
             )
           } else {
             ;(event.source as Player).sendMessage(
-              "Please select a block type with the fill tool block selection tool first by using the tool on a block."
+              "Please select a block type with the fill tool block selection tool first by using the tool on a block.",
             )
           }
 
@@ -340,11 +346,11 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
               secondBlock.location.y,
               secondBlock.location.z,
               playerState!.blockPermutation,
-              { hollow: true }
+              { hollow: true },
             )
           } else {
             ;(event.source as Player).sendMessage(
-              "Please select a block type with the fill tool block selection tool first by using the tool on a block."
+              "Please select a block type with the fill tool block selection tool first by using the tool on a block.",
             )
           }
 
@@ -391,7 +397,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
             playerState!.firstBlock.location.z,
             secondBlock.location.x,
             secondBlock.location.y,
-            secondBlock.location.z
+            secondBlock.location.z,
           )
 
           playerState!.firstBlock = null
@@ -438,7 +444,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
             secondBlock.location.x,
             secondBlock.location.y,
             secondBlock.location.z,
-            playerState!
+            playerState!,
           )
 
           playerState!.firstBlock = null
@@ -485,7 +491,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
             secondBlock.location.x,
             secondBlock.location.y,
             secondBlock.location.z,
-            playerState!
+            playerState!,
           )
 
           playerState!.firstBlock = null
@@ -533,13 +539,13 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
               secondBlock.location.x,
               secondBlock.location.y,
               secondBlock.location.z,
-              playerState.savedSpace
+              playerState.savedSpace,
             )
 
             playerState!.firstBlock = null
           } else {
             ;(event.source as Player).sendMessage(
-              "Please copy space first before pasting."
+              "Please copy space first before pasting.",
             )
           }
         }
@@ -586,13 +592,13 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
               secondBlock.location.x,
               secondBlock.location.y,
               secondBlock.location.z,
-              playerState.savedSpace
+              playerState.savedSpace,
             )
 
             playerState!.firstBlock = null
           } else {
             ;(event.source as Player).sendMessage(
-              "Please copy space first before pasting."
+              "Please copy space first before pasting.",
             )
           }
         }
@@ -624,7 +630,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
 
       system.run(function () {
         const inventory = event.source.getComponent(
-          EntityInventoryComponent.componentId
+          EntityInventoryComponent.componentId,
         ) as EntityInventoryComponent
         inventory.container.addItem(event.block.permutation.getItemStack(1))
       })
@@ -669,11 +675,11 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
               secondBlock.location.x,
               secondBlock.location.y,
               secondBlock.location.z,
-              playerState!.blockPermutation
+              playerState!.blockPermutation,
             )
           } else {
             ;(event.source as Player).sendMessage(
-              "Please select a block type with the fill tool block selection tool first by using the tool on a block."
+              "Please select a block type with the fill tool block selection tool first by using the tool on a block.",
             )
           }
 
@@ -686,6 +692,77 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
   }
 })
 
+world.beforeEvents.itemUse.subscribe(function (event) {
+  if (event.itemStack.typeId === "sanjo:undo_tool") {
+    const now = Date.now()
+
+    event.cancel = true
+
+    let playerState: PlayerState | undefined = state.get(event.source)
+
+    if (
+      !playerState ||
+      !playerState.lastCalled ||
+      now - playerState.lastCalled > 300
+    ) {
+      if (!playerState) {
+        playerState = {
+          firstBlock: null,
+          lastCalled: null,
+          blockPermutation: null,
+          savedSpace: null,
+        }
+        state.set(event.source, playerState)
+      }
+
+      system.run(function () {
+        undo()
+      })
+
+      playerState.lastCalled = now
+    }
+  }
+})
+
+interface PreviousState {
+  fromX: number
+  fromY: number
+  fromZ: number
+  toX: number
+  toY: number
+  toZ: number
+  state: (BlockPermutation | null)[]
+}
+
+const previousStates: PreviousState[] = []
+
+function undo(): void {
+  const previousState = previousStates.pop()
+  if (previousState) {
+    const { fromX, fromY, fromZ, toX, toY, toZ, state } = previousState
+    const space = {
+      dimensions: calculateDimensions(fromX, fromY, fromZ, toX, toY, toZ),
+      state,
+    }
+    paste(fromX, fromY, fromZ, toX, toY, toZ, space, { backUp: false })
+  }
+}
+
+function calculateDimensions(
+  fromX: number,
+  fromY: number,
+  fromZ: number,
+  toX: number,
+  toY: number,
+  toZ: number,
+): Dimensions {
+  return {
+    x: Math.abs(toX - fromX) + 1,
+    y: Math.abs(toY - fromY) + 1,
+    z: Math.abs(toZ - fromZ) + 1,
+  }
+}
+
 function fill(
   fromX: number,
   fromY: number,
@@ -694,8 +771,9 @@ function fill(
   toY: number,
   toZ: number,
   permutation: BlockPermutation,
-  options: { hollow?: boolean } = { hollow: false }
+  options: { hollow?: boolean } = { hollow: false },
 ) {
+  backUp(fromX, fromY, fromZ, toX, toY, toZ)
   const x1 = Math.min(fromX, toX)
   const y1 = Math.min(fromY, toY)
   const z1 = Math.min(fromZ, toZ)
@@ -725,6 +803,26 @@ function fill(
   }
 }
 
+function backUp(
+  fromX: number,
+  fromY: number,
+  fromZ: number,
+  toX: number,
+  toY: number,
+  toZ: number,
+): void {
+  previousStates.push({
+    fromX,
+    fromY,
+    fromZ,
+    toX,
+    toY,
+    toZ,
+    state: retrieveSpace(fromX, fromY, fromZ, toX, toY, toZ, { withAir: true })
+      .state,
+  })
+}
+
 function makeRoof(
   fromX: number,
   fromY: number,
@@ -732,8 +830,9 @@ function makeRoof(
   toX: number,
   toY: number,
   toZ: number,
-  permutation: BlockPermutation
+  permutation: BlockPermutation,
 ) {
+  backUp(fromX, fromY, fromZ, toX, toY, toZ)
   const x1 = Math.min(fromX, toX)
   const y1 = Math.min(fromY, toY)
   const z1 = Math.min(fromZ, toZ)
@@ -773,7 +872,7 @@ function makeRoof(
             }
             permutationForBlock = permutation.withState(
               "weirdo_direction",
-              weirdoDirection!
+              weirdoDirection!,
             )
           } else {
             permutationForBlock = permutation
@@ -803,8 +902,9 @@ function remove(
   fromZ: number,
   toX: number,
   toY: number,
-  toZ: number
+  toZ: number,
 ) {
+  backUp(fromX, fromY, fromZ, toX, toY, toZ)
   const x1 = Math.min(fromX, toX)
   const y1 = Math.min(fromY, toY)
   const z1 = Math.min(fromZ, toZ)
@@ -829,15 +929,23 @@ function copy(
   toX: number,
   toY: number,
   toZ: number,
-  playerState: PlayerState
+  playerState: PlayerState,
 ) {
-  const dimensions = {
-    x: Math.abs(toX - fromX) + 1,
-    y: Math.abs(toY - fromY) + 1,
-    z: Math.abs(toZ - fromZ) + 1,
-  }
+  playerState.savedSpace = retrieveSpace(fromX, fromY, fromZ, toX, toY, toZ)
+}
+
+function retrieveSpace(
+  fromX: number,
+  fromY: number,
+  fromZ: number,
+  toX: number,
+  toY: number,
+  toZ: number,
+  options: { withAir: boolean } = { withAir: false },
+): Space {
+  const dimensions = calculateDimensions(fromX, fromY, fromZ, toX, toY, toZ)
   const state = new Array(dimensions.x * dimensions.y * dimensions.z)
-  const savedSpace = {
+  const space = {
     dimensions,
     state,
   }
@@ -853,7 +961,7 @@ function copy(
         const block = overworld.getBlock({ x: x1 + x, y: y1 + y, z: z1 + z })
         if (block) {
           const permutation = block.permutation
-          if (permutation.type.id === "minecraft:air") {
+          if (!options.withAir && permutation.type.id === "minecraft:air") {
             savedPermutation = null
           } else {
             savedPermutation = permutation.clone()
@@ -867,7 +975,8 @@ function copy(
       }
     }
   }
-  playerState.savedSpace = savedSpace
+
+  return space
 }
 
 function cut(
@@ -877,8 +986,9 @@ function cut(
   toX: number,
   toY: number,
   toZ: number,
-  playerState: PlayerState
+  playerState: PlayerState,
 ) {
+  backUp(fromX, fromY, fromZ, toX, toY, toZ)
   copy(fromX, fromY, fromZ, toX, toY, toZ, playerState)
   remove(fromX, fromY, fromZ, toX, toY, toZ)
 }
@@ -890,8 +1000,12 @@ function paste(
   toX: number,
   toY: number,
   toZ: number,
-  space: Space
+  space: Space,
+  options: { backUp: boolean } = { backUp: true },
 ) {
+  if (options.backUp) {
+    backUp(fromX, fromY, fromZ, toX, toY, toZ)
+  }
   const x1 = Math.min(fromX, toX)
   const y1 = Math.min(fromY, toY)
   const z1 = Math.min(fromZ, toZ)
@@ -923,8 +1037,9 @@ function paste180DegreeRotated(
   toX: number,
   toY: number,
   toZ: number,
-  space: Space
+  space: Space,
 ) {
+  backUp(fromX, fromY, fromZ, toX, toY, toZ)
   const x2 = Math.max(fromX, toX)
   const y1 = Math.min(fromY, toY)
   const z2 = Math.max(fromZ, toZ)
@@ -950,11 +1065,11 @@ function paste180DegreeRotated(
                 [3, 2],
               ])
               const rotatedWeirdoDirection = rotations.get(
-                weirdoDirection as number
+                weirdoDirection as number,
               )!
               permutation = permutation.withState(
                 "weirdo_direction",
-                rotatedWeirdoDirection
+                rotatedWeirdoDirection,
               )
             }
             block.setPermutation(permutation)
