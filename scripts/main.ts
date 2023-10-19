@@ -297,7 +297,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
             )
           } else {
             ;(event.source as Player).sendMessage(
-              "Please select a block type with the fill tool block selection tool first by using the tool on a block.",
+              "Please select a block type with the block selection tool first by using the tool on a block.",
             )
           }
 
@@ -350,7 +350,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
             )
           } else {
             ;(event.source as Player).sendMessage(
-              "Please select a block type with the fill tool block selection tool first by using the tool on a block.",
+              "Please select a block type with the block selection tool first by using the tool on a block.",
             )
           }
 
@@ -679,7 +679,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
             )
           } else {
             ;(event.source as Player).sendMessage(
-              "Please select a block type with the fill tool block selection tool first by using the tool on a block.",
+              "Please select a block type with the block selection tool first by using the tool on a block.",
             )
           }
 
