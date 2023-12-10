@@ -4,8 +4,8 @@
     "name": "Building tools",
     "description": "Building tools.",
     "uuid": "e378658f-11ad-49d5-bad4-3140480b3428",
-    "version": [1, 4, 2],
-    "min_engine_version": [1, 20, 40]
+    "version": [1, 4, 3],
+    "min_engine_version": [1, 20, 50]
   },
   "modules": [
     {
@@ -13,20 +13,20 @@
       "language": "javascript",
       "type": "script",
       "uuid": "d20025fc-73c9-420a-85b3-936f06f5346d",
-      "version": [1, 4, 2],
+      "version": [1, 4, 3],
       "entry": "scripts/main.js"
     },
     {
       "description": "Building tools",
       "type": "data",
       "uuid": "cd46f994-8f7f-4ec3-ab4f-f5cdde0fe68d",
-      "version": [1, 4, 2]
+      "version": [1, 4, 3]
     }
   ],
   "dependencies": [
     {
       "module_name": "@minecraft/server",
-      "version": "1.7.0-beta"
+      "version": "1.8.0-beta"
     }
   ]
 }

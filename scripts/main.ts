@@ -632,7 +632,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
         const inventory = event.source.getComponent(
           EntityInventoryComponent.componentId,
         ) as EntityInventoryComponent
-        inventory.container.addItem(event.block.permutation.getItemStack(1)!)
+        inventory.container?.addItem(event.block.permutation.getItemStack(1)!)
       })
 
       playerState.lastCalled = now
