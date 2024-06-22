@@ -16,10 +16,6 @@ An add-on for Minecraft Bedrock that adds building tools to help in making build
 - Roof maker: an item with which you can build roofs.
 - Undo tool: an item that, on use, undoes the last changes made with one of the other tools.
 
-## Requirements
-
-Requires Beta APIs to be enabled under "Experiments" in the world settings.
-
 ## Supported versions
 
-The latest version (1.4.4) has been tested with v1.20.62.
+The latest version (1.4.5) has been tested with v1.21.1.

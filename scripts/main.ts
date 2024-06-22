@@ -245,7 +245,7 @@ world.beforeEvents.itemUseOn.subscribe(function (event) {
         state.set(event.source, playerState)
       }
 
-      playerState.blockPermutation = event.block.permutation.clone()
+      playerState.blockPermutation = event.block.permutation
       ;(event.source as Player).sendMessage(
         "selected block: " +
           event.block.permutation.type.id +
@@ -964,7 +964,7 @@ function retrieveSpace(
           if (!options.withAir && permutation.type.id === "minecraft:air") {
             savedPermutation = null
           } else {
-            savedPermutation = permutation.clone()
+            savedPermutation = permutation
           }
         } else {
           savedPermutation = null
